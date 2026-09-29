@@ -81,6 +81,7 @@ app.get(/.*/, (req, res) => {
 process.on('uncaughtException', (err) => {
     console.error('FATAL EXCEPTION:', err.message);
     console.error(err.stack);
+    process.exit(1);
 });
 
 process.on('unhandledRejection', (reason, promise) => {
@@ -89,7 +90,7 @@ process.on('unhandledRejection', (reason, promise) => {
 
 const pool = require('./src/config/database');
 pool.initDb().then(() => {
-    app.listen(PORT, process.env.HOST || '127.0.0.1', () => {
+    app.listen(PORT, process.env.HOST || (process.env.NODE_ENV === 'production' ? '0.0.0.0' : '127.0.0.1'), () => {
         console.log(`Server running at http://localhost:${PORT}`);
     });
 }).catch(() => process.exit(1));

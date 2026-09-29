@@ -5,7 +5,8 @@ const sharp = require('sharp');
 const fs = require('node:fs/promises');
 const path = require('node:path');
 const xlsx = require('xlsx');
-const base = 'http://127.0.0.1:3001/api';
+const origin = process.env.TEST_ORIGIN || 'http://127.0.0.1:3001';
+const base = origin + '/api';
 let token, classId, userId, sessionId, photo;
 async function request(route, method = 'GET', body, expected = 200) {
   const response = await fetch(base + route, { method, headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) }, body: body ? JSON.stringify(body) : undefined });
@@ -27,7 +28,7 @@ async function request(route, method = 'GET', body, expected = 200) {
     const users = await request('/users');
     photo = users.users.find(u => u.id === userId).photo;
     assert.ok(photo.startsWith('/uploads/'));
-    assert.equal((await fetch('http://127.0.0.1:3001' + photo)).status, 200);
+    assert.equal((await fetch(origin + photo)).status, 200);
     await request('/attendance', 'POST', { faceLandmarks: descriptor }, 403);
     sessionId = (await request('/sessions', 'POST', { action: 'create', name: 'Smoke test', class_id: classId, duration: 10, type: 'in' })).id;
     assert.ok((await request('/attendance', 'POST', { faceLandmarks: descriptor })).success);

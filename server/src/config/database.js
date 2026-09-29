@@ -1,10 +1,15 @@
 const { Pool } = require('pg');
 
+if (!process.env.DATABASE_URL) {
+  throw new Error('DATABASE_URL is required. Set it in server/.env locally or in your hosting environment.');
+}
+
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  ssl: {
-    rejectUnauthorized: false
-  }
+  ssl: process.env.DATABASE_SSL === 'false' ? false : {
+    rejectUnauthorized: true
+  },
+  connectionTimeoutMillis: 5000
 });
 
 // Helper function to execute queries for schema initialization
@@ -67,10 +72,11 @@ const initDb = async () => {
     console.log("Database schema initialized successfully.");
   } catch (error) {
     console.error("Failed to initialize database schema:", error);
+    throw error;
   }
 };
 
-// Initialize schema on startup
-initDb();
+// index.js waits for schema initialization before starting HTTP.
+pool.initDb = initDb;
 
 module.exports = pool;
