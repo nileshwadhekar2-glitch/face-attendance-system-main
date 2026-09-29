@@ -1,4 +1,14 @@
 require('dotenv').config({ path: require('path').join(__dirname, '.env') });
+if (process.env.NODE_ENV === 'production') {
+    const required = ['DATABASE_URL', 'ADMIN_USERNAME', 'ADMIN_PASSWORD', 'JWT_SECRET'];
+    const missing = required.filter(key => !process.env[key]);
+    if (missing.length) {
+        throw new Error(`Missing production environment variables: ${missing.join(', ')}`);
+    }
+    if (process.env.ADMIN_PASSWORD === 'admin123' || process.env.JWT_SECRET === 'supersecret') {
+        throw new Error('Set unique production ADMIN_PASSWORD and JWT_SECRET values.');
+    }
+}
 const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');

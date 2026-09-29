@@ -10,7 +10,7 @@ const registerUser = async (user) => {
     
     // Enforce BLOCK LETTERS as per system requirements
     name = (name || '').toUpperCase();
-    // Handle Cloudinary Upload for Base64 photo
+    // Compress and store the enrollment photo using the configured provider.
     if (photo && photo.startsWith('data:image')) {
         try {
             if (process.env.PHOTO_STORAGE === 'local') {
@@ -21,6 +21,11 @@ const registerUser = async (user) => {
                     .resize(640, 640, { fit: 'inside', withoutEnlargement: true })
                     .jpeg({ quality: 80 }).toFile(path.join(directory, filename));
                 photo = `/uploads/${filename}`;
+            } else if (process.env.PHOTO_STORAGE === 'database') {
+                const image = await sharp(Buffer.from(photo.split(',')[1], 'base64'))
+                    .resize(320, 320, { fit: 'inside', withoutEnlargement: true })
+                    .jpeg({ quality: 75 }).toBuffer();
+                photo = `data:image/jpeg;base64,${image.toString('base64')}`;
             } else {
             const uploadResponse = await cloudinary.uploader.upload(photo, {
                 folder: 'student_faces',
@@ -29,7 +34,7 @@ const registerUser = async (user) => {
             photo = uploadResponse.secure_url;
             }
         } catch (err) {
-            console.error("Cloudinary upload failed in service:", err);
+            console.error("Photo storage failed:", err);
             throw new Error(`Failed to upload student image: ${err.message}`);
         }
     }

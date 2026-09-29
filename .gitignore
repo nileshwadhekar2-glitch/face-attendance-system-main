@@ -2,3 +2,6 @@
 **/node_modules/
 **/.env
 client/dist/
+
+# Enrollment images are runtime data, not deployment source.
+server/uploads/
